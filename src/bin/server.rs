@@ -171,3 +171,16 @@ fn main() {
         .mount("/", routes![index, files])
         .launch();
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_encrypt() {
+        assert_eq!(encrypt_password("test"), String::from("9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"));
+        assert_eq!(encrypt_password("admin"), String::from("8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"));
+        assert_eq!(encrypt_password("password123"), String::from("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f"));
+        assert_eq!(encrypt_password("asdf!§$%"), String::from("dce524145c8b31fdab6c924e6245efec9b3a348e03646577cf0da89848fadafb"));
+    }
+}
