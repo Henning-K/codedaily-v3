@@ -21,16 +21,12 @@ use rocket_contrib::{Json, Value};
 use std::io;
 use std::path::{Path, PathBuf};
 use rocket::response::NamedFile;
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
 
 const LINKS_PER_PAGE: i64 = 30;
 
 /// Encrypt passwords using SHA256
 fn encrypt_password(input: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.input_str(input);
-    hasher.result_str()
+    digest(input)
 }
 
 /// Registers a user and creates a record for them in the database.
