@@ -26,12 +26,16 @@ use crypto::sha2::Sha256;
 
 const LINKS_PER_PAGE: i64 = 30;
 
+/// Encrypt passwords using SHA256
 fn encrypt_password(input: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.input_str(input);
     hasher.result_str()
 }
 
+/// Registers a user and creates a record for them in the database.
+/// Returns a Json construct containing a "false" result flag if the given user name or email address already exists
+/// in the database, otherwise the function returns a "true" result flag and the user data in a Json construct.
 #[post("/users/register", format = "application/json", data = "<user>")]
 fn register_user(user: Json<User>) -> Json<Value> {
     use schema::users;
@@ -62,6 +66,10 @@ fn register_user(user: Json<User>) -> Json<Value> {
     }
 }
 
+/// Logs a user in by creating an auth token, an expiry date and inserting a record of these into the DB.
+/// Returns a "false" result flag wrapped in Json if the user could not be found (or the password does not match),
+/// otherwise returns a Json construct containing a "true" result flag, the user name, the user's email address
+/// and the auth token which then also exists in the DB.
 #[post("/users/login", format = "application/json", data="<user>")]
 fn login_user(user: Json<Value>) -> Json<Value> {
     use schema::auth_tokens;
@@ -102,6 +110,9 @@ fn login_user(user: Json<Value>) -> Json<Value> {
     }
 }
 
+/// Attempts to find the logged-in user by their user ID.
+/// Panics if the user is not found otherwise returns a "true" result flag, the user name, the user's email address
+/// and the auth token wrapped in a Json construct.
 #[get("/users/me")]
 fn get_user(auth: Auth) -> Json<Value> {
     let connection = establish_connection();
@@ -118,6 +129,8 @@ fn get_user(auth: Auth) -> Json<Value> {
     }))
 }
 
+/// Attempts to read LINKS_PER_PAGE number of links from the DB, sorted by time in descending order,
+/// returning a "success" status flag, the links and the number of links found (if any) in a Json construct.
 #[get("/feed/<page>")]
 fn feed(page: i64) -> Json<Value> {
     let connection = establish_connection();
@@ -138,16 +151,20 @@ fn feed(page: i64) -> Json<Value> {
     }))
 }
 
+/// Opens the "www/index.html" file in response to the default route "/" being requested by the client.
 #[get("/")]
 fn index() -> io::Result<NamedFile> {
     NamedFile::open("www/index.html")
 }
 
+/// Returns the file in the www/ folder given by name in the client's request, wrapped in an Option.
 #[get("/<file..>", rank = 5)]
 fn files(file: PathBuf) -> Option<NamedFile> {
     NamedFile::open(Path::new("www/").join(file)).ok()
 }
 
+/// Main function of the server.
+/// Creates a new Rocket instance, "mounts" the routes given above and launches the server.
 fn main() {
     rocket::ignite()
         .mount("/api/", routes![feed, register_user, login_user, get_user])
