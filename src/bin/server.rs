@@ -171,6 +171,10 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::process::Command;
+
+    // Idea by eijebong on #rust-beginners: use the "fake" establish_connection that only creates a temporary
+    // transaction with a #[cfg(test)] and mark the real one with #[cfg(not(test))] inside the fn's to be tested.
 
     #[test]
     fn test_encrypt() {
@@ -178,5 +182,30 @@ mod tests {
         assert_eq!(encrypt_password("admin"), String::from("8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"));
         assert_eq!(encrypt_password("password123"), String::from("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f"));
         assert_eq!(encrypt_password("asdf!§$%"), String::from("dce524145c8b31fdab6c924e6245efec9b3a348e03646577cf0da89848fadafb"));
+    }
+
+    #[test]
+    fn test_register_user() {
+        let status = Command::new("diesel").arg("database reset").status().expect("DB reset before test_register_user failed.");
+        assert!(status.success());
+
+        let user1 = User {
+            id:         1,
+            username:   "user1".to_owned(),
+            password:   "pass1".to_owned(),
+            email:      "user1@example.org".to_owned(),
+            enable:     1,
+        };
+
+        let user2 = User {
+            id:         1,
+            username:   "user2".to_owned(),
+            password:   "asdf!§$%".to_owned(),
+            email:      "user2@example.org".to_owned(),
+            enable:     1,
+        };
+
+        // same as user1, just different username, this should return false since the email is already in the DB.
+        let user1_2 = User { username: "user3", .. user1 };
     }
 }
