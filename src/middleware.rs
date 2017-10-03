@@ -18,7 +18,7 @@ pub struct Auth {
     pub user_id: i32,
 }
 
-fn authenticate(conn: &PgConnection, t_token: &str) -> Result<Auth, String> {
+pub fn authenticate(conn: &PgConnection, t_token: &str) -> Result<Auth, String> {
     use schema::auth_tokens;
     use schema::users;
     use schema::auth_tokens::dsl::*;
